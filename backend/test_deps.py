@@ -1,0 +1,6 @@
+import pandas; print('pandas:', pandas.__version__)
+import numpy; print('numpy:', numpy.__version__)
+import sklearn; print('sklearn:', sklearn.__version__)
+import fastapi; print('fastapi:', fastapi.__version__)
+import joblib; print('joblib OK')
+from rdkit import Chem; print('rdkit OK')

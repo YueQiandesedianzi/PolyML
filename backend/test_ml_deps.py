@@ -1,0 +1,6 @@
+import xgboost; print('xgboost:', xgboost.__version__)
+import optuna; print('optuna:', optuna.__version__)
+import shap; print('shap:', shap.__version__)
+import uvicorn; print('uvicorn OK')
+import aiosqlite; print('aiosqlite OK')
+print('All ML deps OK')

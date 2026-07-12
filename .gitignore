@@ -1,0 +1,52 @@
+# Dependencies
+node_modules/
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+
+# Build outputs
+out/
+dist/
+release/
+*.tsbuildinfo
+
+# Environment
+.env
+.env.local
+
+# Data / Cache
+hf_cache/
+downloads/
+*.db
+*.sqlite
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Temporary files
+temp_*.pptx
+*.log
+
+# Other projects (not part of PolyML)
+adk_temp/
+ppt_slides/
+ppt-master-main/
+Unlimited-OCR/
+free-llm-api-resources/
+sci-agents/
+knowledge-graph/
+lit-search-workspace/
+pu_papers/
+dcPU_project/
+查引/
+tools/
+frontend/.vite/

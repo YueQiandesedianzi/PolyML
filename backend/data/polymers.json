@@ -1,0 +1,608 @@
+[
+  {
+    "common_name": "Polyethylene",
+    "abbreviation": "PE",
+    "smiles": "*CC*",
+    "tags": ["thermoplastic", "semi-crystalline", "commodity"]
+  },
+  {
+    "common_name": "Polypropylene",
+    "abbreviation": "PP",
+    "smiles": "*CC(C)*",
+    "tags": ["thermoplastic", "semi-crystalline", "commodity"]
+  },
+  {
+    "common_name": "Polystyrene",
+    "abbreviation": "PS",
+    "smiles": "*CC(*)c1ccccc1",
+    "tags": ["thermoplastic", "amorphous", "commodity"]
+  },
+  {
+    "common_name": "Poly(vinyl chloride)",
+    "abbreviation": "PVC",
+    "smiles": "*CC(Cl)*",
+    "tags": ["thermoplastic", "amorphous", "commodity"]
+  },
+  {
+    "common_name": "Poly(vinyl acetate)",
+    "abbreviation": "PVAc",
+    "smiles": "*CC(OC(=O)C)*",
+    "tags": ["thermoplastic", "amorphous"]
+  },
+  {
+    "common_name": "Poly(vinyl alcohol)",
+    "abbreviation": "PVA",
+    "smiles": "*CC(O)*",
+    "tags": ["thermoplastic", "water-soluble"]
+  },
+  {
+    "common_name": "Poly(methyl methacrylate)",
+    "abbreviation": "PMMA",
+    "smiles": "*CC(C)(C(=O)OC)*",
+    "tags": ["thermoplastic", "amorphous", "engineering"]
+  },
+  {
+    "common_name": "Poly(ethyl methacrylate)",
+    "abbreviation": "PEMA",
+    "smiles": "*CC(C)(C(=O)OCC)*",
+    "tags": ["thermoplastic", "amorphous"]
+  },
+  {
+    "common_name": "Poly(butyl methacrylate)",
+    "abbreviation": "PBMA",
+    "smiles": "*CC(C)(C(=O)OCCCC)*",
+    "tags": ["thermoplastic", "amorphous"]
+  },
+  {
+    "common_name": "Poly(acrylic acid)",
+    "abbreviation": "PAA",
+    "smiles": "*CC(C(=O)O)*",
+    "tags": ["thermoplastic", "water-soluble", "polyelectrolyte"]
+  },
+  {
+    "common_name": "Polyacrylamide",
+    "abbreviation": "PAM",
+    "smiles": "*CC(C(=O)N)*",
+    "tags": ["water-soluble", "polyelectrolyte"]
+  },
+  {
+    "common_name": "Polyacrylonitrile",
+    "abbreviation": "PAN",
+    "smiles": "*CC(C#N)*",
+    "tags": ["thermoplastic", "precursor"]
+  },
+  {
+    "common_name": "Poly(vinylidene fluoride)",
+    "abbreviation": "PVDF",
+    "smiles": "*CC(F)(F)*",
+    "tags": ["thermoplastic", "semi-crystalline", "fluoropolymer"]
+  },
+  {
+    "common_name": "Polytetrafluoroethylene",
+    "abbreviation": "PTFE",
+    "smiles": "*C(F)(F)C(F)(F)*",
+    "tags": ["thermoplastic", "semi-crystalline", "fluoropolymer"]
+  },
+  {
+    "common_name": "Poly(vinyl fluoride)",
+    "abbreviation": "PVF",
+    "smiles": "*CC(F)*",
+    "tags": ["thermoplastic", "semi-crystalline", "fluoropolymer"]
+  },
+  {
+    "common_name": "Poly(ethylene oxide)",
+    "abbreviation": "PEO",
+    "smiles": "*CCO*",
+    "tags": ["water-soluble", "semi-crystalline", "polyether"]
+  },
+  {
+    "common_name": "Poly(propylene oxide)",
+    "abbreviation": "PPO",
+    "smiles": "*CC(C)O*",
+    "tags": ["polyether"]
+  },
+  {
+    "common_name": "Poly(oxymethylene)",
+    "abbreviation": "POM",
+    "smiles": "*CO*",
+    "tags": ["thermoplastic", "semi-crystalline", "engineering"]
+  },
+  {
+    "common_name": "Poly(ethylene terephthalate)",
+    "abbreviation": "PET",
+    "smiles": "*CCOC(=O)c1ccc(C(=O)O)cc1*",
+    "tags": ["thermoplastic", "semi-crystalline", "polyester", "engineering"]
+  },
+  {
+    "common_name": "Poly(butylene terephthalate)",
+    "abbreviation": "PBT",
+    "smiles": "*CCCCOC(=O)c1ccc(C(=O)O)cc1*",
+    "tags": ["thermoplastic", "semi-crystalline", "polyester", "engineering"]
+  },
+  {
+    "common_name": "Polycarbonate (Bisphenol A)",
+    "abbreviation": "PC",
+    "smiles": "*OC(=O)Oc1ccc(C(C)(C)c2ccc(OC(=O)O*)cc2)cc1",
+    "tags": ["thermoplastic", "amorphous", "engineering"]
+  },
+  {
+    "common_name": "Nylon 6",
+    "abbreviation": "PA6",
+    "smiles": "*CCCCCNC(=O)*",
+    "tags": ["thermoplastic", "semi-crystalline", "polyamide", "engineering"]
+  },
+  {
+    "common_name": "Nylon 66",
+    "abbreviation": "PA66",
+    "smiles": "*CCCCCC(=O)NCCCCCCNC(=O)*",
+    "tags": ["thermoplastic", "semi-crystalline", "polyamide", "engineering"]
+  },
+  {
+    "common_name": "Nylon 12",
+    "abbreviation": "PA12",
+    "smiles": "*CCCCCCCCCCCNC(=O)*",
+    "tags": ["thermoplastic", "semi-crystalline", "polyamide", "engineering"]
+  },
+  {
+    "common_name": "Poly(ether ether ketone)",
+    "abbreviation": "PEEK",
+    "smiles": "*Oc1ccc(Oc2ccc(C(=O)c3ccc(O*)cc3)cc2)cc1",
+    "tags": ["thermoplastic", "semi-crystalline", "high-performance"]
+  },
+  {
+    "common_name": "Poly(phenylene sulfide)",
+    "abbreviation": "PPS",
+    "smiles": "*Sc1ccc(S*)cc1",
+    "tags": ["thermoplastic", "semi-crystalline", "high-performance"]
+  },
+  {
+    "common_name": "Polysulfone",
+    "abbreviation": "PSU",
+    "smiles": "*Oc1ccc(C(C)(C)c2ccc(Oc3ccc(S(=O)(=O)c4ccc(O*)cc4)cc3)cc2)cc1",
+    "tags": ["thermoplastic", "amorphous", "high-performance"]
+  },
+  {
+    "common_name": "Poly(ether sulfone)",
+    "abbreviation": "PES",
+    "smiles": "*Oc1ccc(S(=O)(=O)c2ccc(O*)cc2)cc1",
+    "tags": ["thermoplastic", "amorphous", "high-performance"]
+  },
+  {
+    "common_name": "Polyimide (Kapton-type)",
+    "abbreviation": "PI",
+    "smiles": "*O=C1c2ccc(C(=O)N(c3ccc(OC4ccc(N5C(=O)c6ccc(C5=O)c(C(=O)O*)c6)cc4)cc3)C1=O)cc2",
+    "tags": ["thermoset", "high-performance"]
+  },
+  {
+    "common_name": "Polyurethane",
+    "abbreviation": "PU",
+    "smiles": "*OC(=O)NCCNC(=O)O*",
+    "tags": ["thermoset", "elastomer"]
+  },
+  {
+    "common_name": "Poly(dimethylsiloxane)",
+    "abbreviation": "PDMS",
+    "smiles": "*[Si](C)(C)O[Si](C)(C)*",
+    "tags": ["elastomer", "silicone"]
+  },
+  {
+    "common_name": "Polyisoprene (cis-1,4)",
+    "abbreviation": "IR",
+    "smiles": "*C/C=C(/C)CC*",
+    "tags": ["elastomer", "rubber"]
+  },
+  {
+    "common_name": "Polybutadiene",
+    "abbreviation": "BR",
+    "smiles": "*CC=CCC*",
+    "tags": ["elastomer", "rubber"]
+  },
+  {
+    "common_name": "Polyisobutylene",
+    "abbreviation": "PIB",
+    "smiles": "*CC(C)(C)*",
+    "tags": ["elastomer"]
+  },
+  {
+    "common_name": "Polychloroprene",
+    "abbreviation": "CR",
+    "smiles": "*C/C=C(/Cl)CC*",
+    "tags": ["elastomer", "rubber"]
+  },
+  {
+    "common_name": "Styrene-Butadiene Rubber",
+    "abbreviation": "SBR",
+    "smiles": "*CC(c1ccccc1)*.*CC=CCC*",
+    "tags": ["elastomer", "rubber", "copolymer"]
+  },
+  {
+    "common_name": "Acrylonitrile-Butadiene-Styrene",
+    "abbreviation": "ABS",
+    "smiles": "*CC(C#N)*.*CC=CCC*.*CC(c1ccccc1)*",
+    "tags": ["thermoplastic", "amorphous", "engineering", "terpolymer"]
+  },
+  {
+    "common_name": "Poly(lactic acid)",
+    "abbreviation": "PLA",
+    "smiles": "*CC(C)C(=O)O*",
+    "tags": ["thermoplastic", "semi-crystalline", "biodegradable"]
+  },
+  {
+    "common_name": "Poly(glycolic acid)",
+    "abbreviation": "PGA",
+    "smiles": "*CC(=O)O*",
+    "tags": ["semi-crystalline", "biodegradable"]
+  },
+  {
+    "common_name": "Poly(caprolactone)",
+    "abbreviation": "PCL",
+    "smiles": "*CCCCCC(=O)O*",
+    "tags": ["semi-crystalline", "biodegradable"]
+  },
+  {
+    "common_name": "Poly(hydroxybutyrate)",
+    "abbreviation": "PHB",
+    "smiles": "*CC(C)CC(=O)O*",
+    "tags": ["semi-crystalline", "biodegradable", "biopolymer"]
+  },
+  {
+    "common_name": "Poly(vinyl pyrrolidone)",
+    "abbreviation": "PVP",
+    "smiles": "*CC(C(=O)N1CCCC1)*",
+    "tags": ["water-soluble", "amorphous"]
+  },
+  {
+    "common_name": "Poly(vinyl butyral)",
+    "abbreviation": "PVB",
+    "smiles": "*CCC(O*)O*",
+    "tags": ["thermoplastic", "amorphous"]
+  },
+  {
+    "common_name": "Poly(vinyl cinnamate)",
+    "abbreviation": "PVCi",
+    "smiles": "*CC(OC(=O)/C=C/c1ccccc1)*",
+    "tags": ["photoresist"]
+  },
+  {
+    "common_name": "Poly(ethyl cyanoacrylate)",
+    "abbreviation": "PECA",
+    "smiles": "*C(C#N)(C(=O)OCC)*",
+    "tags": ["adhesive"]
+  },
+  {
+    "common_name": "Cellulose acetate",
+    "abbreviation": "CA",
+    "smiles": "*O[C@@H]1[C@@H](OC(=O)C)[C@H](OC(=O)C)[C@@H](O*)[C@H](O)[C@@H]1O",
+    "tags": ["thermoplastic", "biopolymer", "semi-crystalline"]
+  },
+  {
+    "common_name": "Cellulose nitrate",
+    "abbreviation": "CN",
+    "smiles": "*O[C@@H]1[C@@H](O[N+](=O)[O-])[C@H](O[N+](=O)[O-])[C@@H](O*)[C@H](O)[C@@H]1O",
+    "tags": ["thermoplastic", "biopolymer"]
+  },
+  {
+    "common_name": "Ethyl cellulose",
+    "abbreviation": "EC",
+    "smiles": "*O[C@@H]1[C@@H](OCC)[C@H](OCC)[C@@H](O*)[C@H](O)[C@@H]1O",
+    "tags": ["thermoplastic", "biopolymer"]
+  },
+  {
+    "common_name": "Poly(ether imide)",
+    "abbreviation": "PEI",
+    "smiles": "*Oc1ccc(C(C)(C)c2ccc(Oc3cccc4C(=O)N(c5cccc6C(=O)N(C(=O)c7cccc(O*)c7)c56)C(=O)c34)cc2)cc1",
+    "tags": ["thermoplastic", "amorphous", "high-performance"]
+  },
+  {
+    "common_name": "Poly(p-phenylene oxide)",
+    "abbreviation": "PPO",
+    "smiles": "*Oc1c(C)c(C)c(O*)c(C)c1C",
+    "tags": ["thermoplastic", "amorphous", "engineering"]
+  },
+  {
+    "common_name": "Poly(p-phenylene vinylene)",
+    "abbreviation": "PPV",
+    "smiles": "*c1ccc(/C=C/c2ccc(*)cc2)cc1",
+    "tags": ["conjugated", "conducting", "OLED"]
+  },
+  {
+    "common_name": "Polyaniline (emeraldine base)",
+    "abbreviation": "PANI",
+    "smiles": "*Nc1ccc(Nc2ccc(N*)cc2)cc1",
+    "tags": ["conjugated", "conducting"]
+  },
+  {
+    "common_name": "Polypyrrole",
+    "abbreviation": "PPy",
+    "smiles": "*c1ccc(N*)c1",
+    "tags": ["conjugated", "conducting"]
+  },
+  {
+    "common_name": "Poly(3-hexylthiophene)",
+    "abbreviation": "P3HT",
+    "smiles": "*c1sc(c(CCCCCC)c1*)CCCCCC",
+    "tags": ["conjugated", "conducting", "organic-electronics"]
+  },
+  {
+    "common_name": "Poly(vinylidene chloride)",
+    "abbreviation": "PVDC",
+    "smiles": "*CC(Cl)(Cl)*",
+    "tags": ["thermoplastic", "semi-crystalline"]
+  },
+  {
+    "common_name": "Poly(vinyl fluoride-tetrafluoroethylene)",
+    "abbreviation": "PVF-TFE",
+    "smiles": "*CC(F)*.*C(F)(F)C(F)(F)*",
+    "tags": ["fluoropolymer", "copolymer"]
+  },
+  {
+    "common_name": "Poly(hexamethylene sebacamide)",
+    "abbreviation": "PA610",
+    "smiles": "*CCCCCC(=O)NCCCCCCCCCCNC(=O)*",
+    "tags": ["thermoplastic", "semi-crystalline", "polyamide", "engineering"]
+  },
+  {
+    "common_name": "Nylon 11",
+    "abbreviation": "PA11",
+    "smiles": "*CCCCCCCCCCCNC(=O)*",
+    "tags": ["thermoplastic", "semi-crystalline", "polyamide", "engineering"]
+  },
+  {
+    "common_name": "Poly(ethylene naphthalate)",
+    "abbreviation": "PEN",
+    "smiles": "*CCOC(=O)c1ccc2c(c1)ccc(C(=O)O*)c2",
+    "tags": ["thermoplastic", "semi-crystalline", "polyester"]
+  },
+  {
+    "common_name": "Poly(trimethylene terephthalate)",
+    "abbreviation": "PTT",
+    "smiles": "*CCCOC(=O)c1ccc(C(=O)O*)cc1",
+    "tags": ["thermoplastic", "semi-crystalline", "polyester"]
+  },
+  {
+    "common_name": "Poly(ether ketone)",
+    "abbreviation": "PEK",
+    "smiles": "*Oc1ccc(C(=O)c2ccc(O*)cc2)cc1",
+    "tags": ["thermoplastic", "semi-crystalline", "high-performance"]
+  },
+  {
+    "common_name": "Poly(phenylene ether sulfone)",
+    "abbreviation": "PPES",
+    "smiles": "*Oc1ccc(Oc2ccc(S(=O)(=O)c3ccc(*)cc3)cc2)cc1",
+    "tags": ["thermoplastic", "amorphous", "high-performance"]
+  },
+  {
+    "common_name": "Polybenzimidazole",
+    "abbreviation": "PBI",
+    "smiles": "*c1ccc(Nc2nc3cc(Nc4ccc(*)cc4)ccc3n2)cc1",
+    "tags": ["thermoset", "high-performance", "fire-resistant"]
+  },
+  {
+    "common_name": "Polyamide-imide",
+    "abbreviation": "PAI",
+    "smiles": "*C(=O)c1ccc(N2C(=O)c3ccc(C2=O)c(C(=O)Nc4ccc(*)cc4)c3)cc1",
+    "tags": ["thermoplastic", "amorphous", "high-performance"]
+  },
+  {
+    "common_name": "Polyarylamide",
+    "abbreviation": "PARA",
+    "smiles": "*C(=O)c1ccc(C(=O)Nc2ccc(NC(=O)c3ccc(*)cc3)cc2)cc1",
+    "tags": ["thermoplastic", "liquid-crystalline", "high-performance"]
+  },
+  {
+    "common_name": "Liquid Crystalline Polyester (Vectra-type)",
+    "abbreviation": "LCP",
+    "smiles": "*C(=O)c1ccc(C(=O)Oc2ccc(Oc3ccc(C(=O)Oc4ccc(*)cc4)cc3)cc2)cc1",
+    "tags": ["thermoplastic", "liquid-crystalline", "high-performance"]
+  },
+  {
+    "common_name": "Ethylene-Vinyl Acetate Copolymer",
+    "abbreviation": "EVA",
+    "smiles": "*CC*.*CC(OC(=O)C)*",
+    "tags": ["thermoplastic", "copolymer", "commodity"]
+  },
+  {
+    "common_name": "Ethylene-Propylene-Diene Monomer Rubber",
+    "abbreviation": "EPDM",
+    "smiles": "*CC*.*CC(C)*",
+    "tags": ["elastomer", "copolymer", "rubber"]
+  },
+  {
+    "common_name": "Poly(styrene-co-acrylonitrile)",
+    "abbreviation": "SAN",
+    "smiles": "*CC(c1ccccc1)*.*CC(C#N)*",
+    "tags": ["thermoplastic", "amorphous", "copolymer"]
+  },
+  {
+    "common_name": "Poly(vinyl chloride-co-vinyl acetate)",
+    "abbreviation": "PVC-co-VAc",
+    "smiles": "*CC(Cl)*.*CC(OC(=O)C)*",
+    "tags": ["thermoplastic", "amorphous", "copolymer"]
+  },
+  {
+    "common_name": "Styrene-Maleic Anhydride Copolymer",
+    "abbreviation": "SMA",
+    "smiles": "*CC(c1ccccc1)*.*C1C(=O)OC(=O)C1*",
+    "tags": ["thermoplastic", "amorphous", "copolymer"]
+  },
+  {
+    "common_name": "Poly(ethylene-co-acrylic acid)",
+    "abbreviation": "EAA",
+    "smiles": "*CC*.*CC(C(=O)O)*",
+    "tags": ["thermoplastic", "copolymer", "ionomer-precursor"]
+  },
+  {
+    "common_name": "Poly(vinyl alcohol-co-ethylene)",
+    "abbreviation": "EVOH",
+    "smiles": "*CC(O)*.*CC*",
+    "tags": ["thermoplastic", "semi-crystalline", "barrier", "copolymer"]
+  },
+  {
+    "common_name": "Poly(ether block amide)",
+    "abbreviation": "PEBA",
+    "smiles": "*C(=O)CCCCCCCCCNC(=O)*.*CCO*",
+    "tags": ["thermoplastic", "elastomer", "block-copolymer"]
+  },
+  {
+    "common_name": "Poly(styrene-b-butadiene-b-styrene)",
+    "abbreviation": "SBS",
+    "smiles": "*CC(c1ccccc1)*.*CC=CCC*.*CC(c1ccccc1)*",
+    "tags": ["thermoplastic", "elastomer", "block-copolymer"]
+  },
+  {
+    "common_name": "Poly(styrene-b-isoprene-b-styrene)",
+    "abbreviation": "SIS",
+    "smiles": "*CC(c1ccccc1)*.*C/C=C(/C)CC*.*CC(c1ccccc1)*",
+    "tags": ["thermoplastic", "elastomer", "block-copolymer"]
+  },
+  {
+    "common_name": "Poly(vinyl methyl ether)",
+    "abbreviation": "PVME",
+    "smiles": "*CC(OC)*",
+    "tags": ["water-soluble", "amorphous"]
+  },
+  {
+    "common_name": "Poly(2-vinylpyridine)",
+    "abbreviation": "P2VP",
+    "smiles": "*CC(c1ccccn1)*",
+    "tags": ["polyelectrolyte"]
+  },
+  {
+    "common_name": "Poly(4-vinylpyridine)",
+    "abbreviation": "P4VP",
+    "smiles": "*CC(c1ccncc1)*",
+    "tags": ["polyelectrolyte"]
+  },
+  {
+    "common_name": "Poly(N-isopropylacrylamide)",
+    "abbreviation": "PNIPAM",
+    "smiles": "*CC(C(=O)NC(C)C)*",
+    "tags": ["thermoresponsive", "water-soluble", "smart-material"]
+  },
+  {
+    "common_name": "Poly(N,N-dimethylacrylamide)",
+    "abbreviation": "PDMA",
+    "smiles": "*CC(C(=O)N(C)C)*",
+    "tags": ["water-soluble"]
+  },
+  {
+    "common_name": "Poly(2-hydroxyethyl methacrylate)",
+    "abbreviation": "PHEMA",
+    "smiles": "*CC(C)(C(=O)OCCO)*",
+    "tags": ["hydrogel", "biocompatible"]
+  },
+  {
+    "common_name": "Poly(ethylene glycol) methacrylate",
+    "abbreviation": "PEGMA",
+    "smiles": "*CC(C)(C(=O)OCCOC)*",
+    "tags": ["water-soluble", "biocompatible"]
+  },
+  {
+    "common_name": "Poly(vinyl carbazole)",
+    "abbreviation": "PVK",
+    "smiles": "*CC(c1cccc2c1c1ccccc1n2)*",
+    "tags": ["photoconductive", "organic-electronics"]
+  },
+  {
+    "common_name": "Poly(bisphenol A carbonate)",
+    "abbreviation": "BPA-PC",
+    "smiles": "*OC(=O)Oc1ccc(C(C)(C)c2ccc(OC(=O)O*)cc2)cc1",
+    "tags": ["thermoplastic", "amorphous", "engineering"]
+  },
+  {
+    "common_name": "Poly(diallyl phthalate)",
+    "abbreviation": "PDAP",
+    "smiles": "*C1COCC1(C(=O)Oc2ccccc2C(=O)OCC1(COCC1)C(=O)Oc2ccccc2C(=O)O*)*",
+    "tags": ["thermoset"]
+  },
+  {
+    "common_name": "Epoxy Resin (DGEBA-based)",
+    "abbreviation": "EP",
+    "smiles": "*Oc1ccc(C(C)(C)c2ccc(OCC3CO3)cc2)cc1",
+    "tags": ["thermoset", "engineering"]
+  },
+  {
+    "common_name": "Phenol-Formaldehyde Resin (Novolac)",
+    "abbreviation": "PF",
+    "smiles": "*c1cc(O)ccc1C*",
+    "tags": ["thermoset"]
+  },
+  {
+    "common_name": "Urea-Formaldehyde Resin",
+    "abbreviation": "UF",
+    "smiles": "*NC(=O)NCNC(=O)N*",
+    "tags": ["thermoset"]
+  },
+  {
+    "common_name": "Melamine-Formaldehyde Resin",
+    "abbreviation": "MF",
+    "smiles": "*Nc1nc(N)nc(NC*)n1",
+    "tags": ["thermoset"]
+  },
+  {
+    "common_name": "Unsaturated Polyester Resin",
+    "abbreviation": "UP",
+    "smiles": "*OC(=O)/C=C/C(=O)O*",
+    "tags": ["thermoset"]
+  },
+  {
+    "common_name": "Poly(ether ether sulfone)",
+    "abbreviation": "PEES",
+    "smiles": "*Oc1ccc(Oc2ccc(S(=O)(=O)c3ccc(Oc4ccc(O*)cc4)cc3)cc2)cc1",
+    "tags": ["thermoplastic", "amorphous", "high-performance"]
+  },
+  {
+    "common_name": "Poly(p-phenylene benzobisoxazole)",
+    "abbreviation": "PBO",
+    "smiles": "*c1cc2nc3cc(*)ccc3oc2cc1",
+    "tags": ["liquid-crystalline", "high-performance", "fiber"]
+  },
+  {
+    "common_name": "Poly(vinyl formal)",
+    "abbreviation": "PVFM",
+    "smiles": "*OCO*",
+    "tags": ["thermoplastic"]
+  },
+  {
+    "common_name": "Poly(epichlorohydrin)",
+    "abbreviation": "PECH",
+    "smiles": "*CC(Cl)CO*",
+    "tags": ["elastomer", "polyether"]
+  },
+  {
+    "common_name": "Poly(tetramethylene oxide)",
+    "abbreviation": "PTMO",
+    "smiles": "*CCCCO*",
+    "tags": ["polyether", "elastomer-segment"]
+  },
+  {
+    "common_name": "Poly(3,4-ethylenedioxythiophene)",
+    "abbreviation": "PEDOT",
+    "smiles": "*c1sc2c(c1*)OCCO2",
+    "tags": ["conjugated", "conducting", "organic-electronics"]
+  },
+  {
+    "common_name": "Poly(p-phenylene)",
+    "abbreviation": "PPP",
+    "smiles": "*c1ccc(*)cc1",
+    "tags": ["conjugated", "conducting"]
+  },
+  {
+    "common_name": "Polyfluorene",
+    "abbreviation": "PF",
+    "smiles": "*c1ccc2c(c1)C(C)(C)c1cc(*)ccc1-2",
+    "tags": ["conjugated", "OLED", "organic-electronics"]
+  },
+  {
+    "common_name": "Poly(sodium 4-styrenesulfonate)",
+    "abbreviation": "PSS",
+    "smiles": "*CC(c1ccc(S(=O)(=O)[O-])cc1)*.[Na+]",
+    "tags": ["water-soluble", "polyelectrolyte"]
+  },
+  {
+    "common_name": "Poly(diallyldimethylammonium chloride)",
+    "abbreviation": "PDADMAC",
+    "smiles": "*C[N+]1(C)CCCC1*.[Cl-]",
+    "tags": ["water-soluble", "polyelectrolyte", "cationic"]
+  }
+]
