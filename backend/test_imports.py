@@ -1,5 +1,6 @@
 import sys
-sys.path.insert(0, 'E:/0-DHU/CC/backend')
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).parent))
 from main import app
 print('FastAPI app created OK')
 from ml.models import MODEL_DEFINITIONS

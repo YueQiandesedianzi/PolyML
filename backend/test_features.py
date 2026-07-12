@@ -1,9 +1,10 @@
-import sys, traceback
-sys.path.insert(0, 'E:/0-DHU/CC/backend')
+import sys
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).parent))
 import pandas as pd
 from services.feature_engineering import engineer_features
 
-df = pd.read_csv('E:/0-DHU/CC/backend/test_polymer_data.csv')
+df = pd.read_csv(Path(__file__).parent / 'test_polymer_data.csv')
 print("Loaded", len(df), "rows")
 print("SMILES sample:", df['SMILES'].iloc[0])
 

@@ -9,14 +9,15 @@ import sys, io
 sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace')
 sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8', errors='replace')
 
-sys.path.insert(0, 'E:/0-DHU/CC/backend')
+sys.path.insert(0, str(Path(__file__).parent))
 import numpy as np
 from pathlib import Path
 from ml.training import run_automl_pipeline
 
-proj_dir = Path("C:/Users/admin/.PolyML/projects/a1989855-c5ea-4359-b6f0-17033204ba29")
-data = np.load(proj_dir / "features.npz", allow_pickle=True)
-X, y = data["X"], data["y"]
+# Generate synthetic test data instead of loading from a specific project path
+rng = np.random.RandomState(42)
+X = rng.randn(100, 20)
+y = X @ rng.randn(20) + rng.randn(100) * 0.5
 print(f"X: {X.shape}, y: {y.shape}")
 print(f"y range: [{y.min():.1f}, {y.max():.1f}]")
 

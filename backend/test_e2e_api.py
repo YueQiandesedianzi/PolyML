@@ -38,8 +38,9 @@ print(f"[2] Project: {pid}")
 
 # 3. Import data via multipart
 import mimetypes, io as _io
+from pathlib import Path
 boundary = "----WebKitFormBoundary7MA4YWxkTrZu0gW"
-csv_path = "E:/0-DHU/CC/backend/test_polymer_data.csv"
+csv_path = Path(__file__).parent / "test_polymer_data.csv"
 with open(csv_path, "rb") as f:
     csv_data = f.read()
 
