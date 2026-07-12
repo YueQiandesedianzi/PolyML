@@ -5,6 +5,8 @@ interface ModelResult {
   rmse?: number
   mae?: number
   duration_sec?: number
+  cv_score?: number
+  selection_metric?: string
 }
 
 interface AutoMLState {

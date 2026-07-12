@@ -11,6 +11,7 @@ export interface ElectronAPI {
   selectSaveFile: (defaultName: string) => Promise<string | null>
   getAppDataPath: () => Promise<string>
   getPlatform: () => Promise<string>
+  getBackendConfig: () => Promise<{ baseUrl: string; sessionToken: string }>
 }
 
 const electronAPI: ElectronAPI = {
@@ -19,6 +20,7 @@ const electronAPI: ElectronAPI = {
   selectSaveFile: (defaultName) => ipcRenderer.invoke('select-save-file', defaultName),
   getAppDataPath: () => ipcRenderer.invoke('get-app-data-path'),
   getPlatform: () => ipcRenderer.invoke('get-platform'),
+  getBackendConfig: () => ipcRenderer.invoke('get-backend-config'),
 }
 
 contextBridge.exposeInMainWorld('electronAPI', electronAPI)

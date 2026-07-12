@@ -4,7 +4,7 @@ Model definitions for polymer AutoML with Optuna parameter spaces.
 """
 
 from sklearn.linear_model import Ridge, Lasso, ElasticNet
-from sklearn.cross_decomposition import PLSCanonical
+from sklearn.cross_decomposition import PLSRegression
 from sklearn.ensemble import RandomForestRegressor, GradientBoostingRegressor, AdaBoostRegressor, BaggingRegressor
 from sklearn.svm import SVR
 from sklearn.gaussian_process import GaussianProcessRegressor
@@ -55,7 +55,7 @@ MODEL_DEFINITIONS = {
         "name": "PLS",
         "description": "偏最小二乘法，适合高维小样本",
         "tags": ["线性", "小样本", "高维"],
-        "estimator_class": PLSCanonical,
+        "estimator_class": PLSRegression,
         "default_params": {},
         "param_space": lambda trial: {
             "n_components": trial.suggest_int("n_components", 2, 10),

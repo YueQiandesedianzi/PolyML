@@ -6,6 +6,7 @@ Pure numpy implementation — no new dependencies required.
 import itertools
 import numpy as np
 from dataclasses import dataclass, field
+from pyDOE3 import bbdesign, ccdesign, ff2n, fracfact_by_res, lhs
 
 
 @dataclass
@@ -18,62 +19,21 @@ class DOEFactor:
 
 def generate_full_factorial(factors: list[DOEFactor]) -> list[dict]:
     """Full factorial design: all 2^k combinations."""
-    k = len(factors)
-    levels = list(itertools.product([0, 1], repeat=k))
-
-    designs = []
-    for combo in levels:
-        row = {}
-        for i, factor in enumerate(factors):
-            row[factor.name] = factor.low if combo[i] == 0 else factor.high
-        designs.append(row)
-    return designs
+    return _decode_coded(ff2n(len(factors)), factors)
 
 
 def generate_fractional_factorial(factors: list[DOEFactor], resolution: int = 3) -> list[dict]:
-    """Fractional factorial using Hadamard matrix construction."""
-    k = len(factors)
-    n = 2 ** k
-
-    # Build Hadamard matrix via Sylvester construction
-    h = np.array([[1]])
-    while h.shape[0] < n:
-        h = np.block([
-            [h, h],
-            [h, -h]
-        ])
-
-    # Select k columns (skip first column of all 1s)
-    cols = h[:, 1:k + 1]
-
-    if resolution >= 4:
-        # Resolution IV: select columns with minimum aliasing
-        selected = list(range(1, k + 1))
-    else:
-        # Resolution III: simple sequential selection
-        selected = list(range(1, k + 1))
-
-    designs = []
-    for row_idx in range(n):
-        row = {}
-        for i, factor in enumerate(factors):
-            val = cols[row_idx, i]
-            row[factor.name] = factor.low if val < 0 else factor.high
-        designs.append(row)
-    return designs
+    """Minimum-run two-level fractional factorial at the requested resolution."""
+    if resolution not in {3, 4, 5}:
+        raise ValueError("Fractional factorial resolution must be 3, 4, or 5")
+    return _decode_coded(fracfact_by_res(len(factors), resolution), factors)
 
 
 def generate_lhs(factors: list[DOEFactor], n_samples: int, seed: int = 42) -> list[dict]:
     """Latin Hypercube Sampling — space-filling design."""
-    rng = np.random.default_rng(seed)
-    k = len(factors)
-
-    # Generate LHS samples
-    samples = np.zeros((n_samples, k))
-    for j in range(k):
-        perm = rng.permutation(n_samples)
-        for i in range(n_samples):
-            samples[i, j] = (perm[i] + rng.random()) / n_samples
+    if n_samples < 1:
+        raise ValueError("LHS requires at least one sample")
+    samples = lhs(len(factors), samples=n_samples, criterion="maximin", random_state=seed)
 
     # Scale to factor ranges
     designs = []
@@ -91,34 +51,7 @@ def generate_box_behnken(factors: list[DOEFactor]) -> list[dict]:
     if k < 3:
         raise ValueError("Box-Behnken requires at least 3 factors")
 
-    designs = []
-    # For each pair of factors, add edge midpoints
-    for i in range(k):
-        for j in range(i + 1, k):
-            # All combinations of -1, 0, +1 for factors i and j, others at 0
-            for vi in [-1, 0, 1]:
-                for vj in [-1, 0, 1]:
-                    if vi == 0 and vj == 0:
-                        continue  # Skip center point here (added below)
-                    row = {}
-                    for f_idx, factor in enumerate(factors):
-                        if f_idx == i:
-                            row[factor.name] = factor.low if vi < 0 else (factor.high if vi > 0 else (factor.center or (factor.low + factor.high) / 2))
-                        elif f_idx == j:
-                            row[factor.name] = factor.low if vj < 0 else (factor.high if vj > 0 else (factor.center or (factor.low + factor.high) / 2))
-                        else:
-                            center = factor.center or (factor.low + factor.high) / 2
-                            row[factor.name] = center
-                    designs.append(row)
-
-    # Add center points (3 replicates)
-    center_row = {}
-    for factor in factors:
-        center_row[factor.name] = factor.center or (factor.low + factor.high) / 2
-    for _ in range(3):
-        designs.append(center_row.copy())
-
-    return designs
+    return _decode_coded(bbdesign(k, center=3), factors)
 
 
 def generate_ccd(factors: list[DOEFactor], alpha: str = "rotatable") -> list[dict]:
@@ -127,44 +60,20 @@ def generate_ccd(factors: list[DOEFactor], alpha: str = "rotatable") -> list[dic
     if k < 3:
         raise ValueError("CCD requires at least 3 factors")
 
-    # Calculate alpha for rotatability
-    if alpha == "rotatable":
-        alpha_val = np.sqrt(k)
-    elif alpha == "orthogonal":
-        alpha_val = np.sqrt(k * (k + 2) / 4)
-    else:
-        alpha_val = float(alpha)
+    alpha_mode = "r" if alpha == "rotatable" else ("o" if alpha == "orthogonal" else alpha)
+    return _decode_coded(ccdesign(k, center=(2, 2), alpha=alpha_mode, face="ccc"), factors)
 
+
+def _decode_coded(matrix: np.ndarray, factors: list[DOEFactor]) -> list[dict]:
+    """Map coded DOE levels to physical factor values, preserving a zero center."""
     designs = []
-
-    # 2^k factorial points (coded -1, +1)
-    for combo in itertools.product([-1, 1], repeat=k):
+    for coded_row in np.asarray(matrix, dtype=float):
         row = {}
-        for i, factor in enumerate(factors):
-            row[factor.name] = factor.low + (combo[i] + 1) / 2 * (factor.high - factor.low)
+        for value, factor in zip(coded_row, factors):
+            center = factor.center if factor.center is not None else (factor.low + factor.high) / 2
+            half_range = (factor.high - factor.low) / 2
+            row[factor.name] = float(center + value * half_range)
         designs.append(row)
-
-    # Star/axial points (+alpha, -alpha)
-    center = [(factor.low + factor.high) / 2 for factor in factors]
-    for i in range(k):
-        for sign in [-1, 1]:
-            row = {}
-            for j, factor in enumerate(factors):
-                center_val = factor.center or (factor.low + factor.high) / 2
-                half_range = (factor.high - factor.low) / 2
-                if j == i:
-                    row[factor.name] = center_val + sign * alpha_val * half_range
-                else:
-                    row[factor.name] = center_val
-            designs.append(row)
-
-    # Center points (4-6 replicates)
-    center_row = {}
-    for factor in factors:
-        center_row[factor.name] = factor.center or (factor.low + factor.high) / 2
-    for _ in range(4):
-        designs.append(center_row.copy())
-
     return designs
 
 
@@ -173,7 +82,7 @@ def estimate_experiment_count(method: str, n_factors: int, n_samples: int | None
     if method == "full_factorial":
         return 2 ** n_factors
     elif method == "fractional_factorial":
-        return 2 ** max(1, n_factors - 1)
+        return len(fracfact_by_res(n_factors, 3))
     elif method == "lhs":
         return n_samples or 10
     elif method == "box_behnken":

@@ -171,7 +171,12 @@ def _evaluate_bin(rule: CustomFeatureRule, df: pd.DataFrame) -> tuple[np.ndarray
         raise ValueError(f"列 '{col_name}' 未找到")
 
     values = pd.to_numeric(df[col_name], errors="coerce")
-    binned = pd.qcut(values, q=n_bins, labels=False, duplicates="drop")
+    saved_edges = rule.params.get("bin_edges")
+    if saved_edges:
+        binned = pd.cut(values, bins=np.asarray(saved_edges, dtype=float), labels=False, include_lowest=True)
+    else:
+        binned, edges = pd.qcut(values, q=n_bins, labels=False, duplicates="drop", retbins=True)
+        rule.params["bin_edges"] = [float(edge) for edge in edges]
     result = binned.values.astype(float)
     result[np.isnan(result)] = 0
 

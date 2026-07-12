@@ -2,7 +2,7 @@
 
 import os
 from pathlib import Path
-from pydantic_settings import BaseSettings
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 def _default_app_data_path() -> str:
@@ -11,6 +11,7 @@ def _default_app_data_path() -> str:
 
 
 class Settings(BaseSettings):
+    model_config = SettingsConfigDict(env_prefix="POLYML_")
     app_data_path: str = _default_app_data_path()
     backend_port: int = 18921
     llm_api_key: str = ""
@@ -28,10 +29,6 @@ class Settings(BaseSettings):
     @property
     def config_path(self) -> Path:
         return Path(self.app_data_path) / "config.json"
-
-    class Config:
-        env_prefix = "POLYML_"
-
 
 settings = Settings()
 

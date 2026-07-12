@@ -15,12 +15,23 @@ import type {
   DOEApplyRequest,
   CustomFeatureRule,
 } from '@/renderer/types/api'
+import { normalizeDOEDesignResponse, normalizePredictionResponse } from './normalizers'
 
 export const API_BASE_URL = 'http://127.0.0.1:18921'
+
+const backendConfigPromise: Promise<{ baseUrl: string; sessionToken: string }> =
+  window.electronAPI?.getBackendConfig?.() ?? Promise.resolve({ baseUrl: API_BASE_URL, sessionToken: '' })
 
 const api = axios.create({
   baseURL: `${API_BASE_URL}/api`,
   timeout: 30000,
+})
+
+api.interceptors.request.use(async (config) => {
+  const backend = await backendConfigPromise
+  config.baseURL = `${backend.baseUrl}/api`
+  if (backend.sessionToken) config.headers.set('X-PolyML-Token', backend.sessionToken)
+  return config
 })
 
 export { api }
@@ -121,12 +132,16 @@ export function trainAutoML(
 ): AbortController {
   const controller = new AbortController()
 
-  fetch(`${API_BASE_URL}/api/projects/${projectId}/automl/train`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(config),
-    signal: controller.signal,
-  })
+  backendConfigPromise
+    .then((backend) => fetch(`${backend.baseUrl}/api/projects/${projectId}/automl/train`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(backend.sessionToken ? { 'X-PolyML-Token': backend.sessionToken } : {}),
+      },
+      body: JSON.stringify(config),
+      signal: controller.signal,
+    }))
     .then(async (response) => {
       if (!response.ok) {
         throw new Error(`Training failed: ${response.statusText}`)
@@ -234,7 +249,7 @@ export async function predict(
   request: PredictionRequest
 ): Promise<PredictionResponse> {
   const { data } = await api.post(`/projects/${projectId}/predict`, request)
-  return data
+  return normalizePredictionResponse(data)
 }
 
 // Models
@@ -248,9 +263,14 @@ export async function saveModel(
 
 export async function listModels(
   projectId: string
-): Promise<Array<{ name: string; type: string; metrics: Record<string, number> }>> {
+): Promise<Array<{ name: string; modelType?: string; metrics: Record<string, number>; legacy: boolean }>> {
   const { data } = await api.get(`/projects/${projectId}/models`)
-  return data
+  return (data || []).map((model: any) => ({
+    ...model,
+    modelType: model.model_type ?? model.modelType,
+    metrics: model.metrics ?? {},
+    legacy: model.legacy ?? false,
+  }))
 }
 
 // Polymer DB
@@ -297,15 +317,7 @@ export async function generateDOEDesign(
   request: DOEDesignRequest
 ): Promise<DOEDesignResponse> {
   const { data } = await api.post(`/projects/${projectId}/doe/generate`, request)
-  return {
-    method: data.method,
-    nExperiments: data.n_experiments ?? data.nExperiments,
-    nBeforeConstraints: data.n_before_constraints ?? data.nBeforeConstraints,
-    designMatrix: data.design_matrix ?? data.designMatrix ?? [],
-    factorNames: data.factor_names ?? data.factorNames ?? [],
-    levels: data.levels,
-    constraintsApplied: data.constraints_applied ?? data.constraintsApplied,
-  }
+  return normalizeDOEDesignResponse(data)
 }
 
 export async function applyDOEDesign(

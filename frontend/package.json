@@ -1,6 +1,6 @@
 {
   "name": "polyml",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Polymer Materials Machine Learning Desktop App",
   "main": "./out/main/index.js",
   "scripts": {
@@ -9,7 +9,8 @@
     "preview": "electron-vite preview",
     "typecheck": "tsc --noEmit",
     "lint": "eslint src --ext .ts,.tsx",
-    "package": "electron-builder --win",
+    "test": "vitest run",
+    "package": "npm run build && electron-builder --win",
     "package:mac": "electron-builder --mac",
     "package:linux": "electron-builder --linux"
   },
@@ -26,14 +27,19 @@
     "@types/react": "^18.3.12",
     "@types/react-dom": "^18.3.1",
     "@types/react-plotly.js": "^2.6.3",
+    "@typescript-eslint/eslint-plugin": "^8.0.0",
+    "@typescript-eslint/parser": "^8.0.0",
     "@vitejs/plugin-react": "^4.3.4",
     "autoprefixer": "^10.4.20",
     "electron": "^39.2.4",
     "electron-builder": "^26.15.3",
     "electron-vite": "^3.1.0",
+    "eslint": "^9.0.0",
+    "eslint-plugin-react-hooks": "^5.0.0",
     "postcss": "^8.4.49",
     "tailwindcss": "^3.4.17",
     "typescript": "^5.7.2",
-    "vite": "^6.0.5"
+    "vite": "^6.0.5",
+    "vitest": "^3.0.0"
   }
 }

@@ -7,12 +7,12 @@ export const PredictPage: React.FC = () => {
   const { currentProject } = useProjectStore()
   const [smiles, setSmiles] = useState('')
   const [params, setParams] = useState<Record<string, string>>({})
-  const [result, setResult] = useState<any>(null)
+  const [result, setResult] = useState<Awaited<ReturnType<typeof predict>> | null>(null)
   const [running, setRunning] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   // Model selection
-  const [savedModels, setSavedModels] = useState<Array<{ name: string; model_type?: string }>>([])
+  const [savedModels, setSavedModels] = useState<Array<{ name: string; modelType?: string; legacy: boolean }>>([])
   const [selectedModel, setSelectedModel] = useState<string>('')
 
   // Polymer name search
@@ -129,9 +129,9 @@ export const PredictPage: React.FC = () => {
                 className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
               >
                 <option value="">使用最佳模型（自动选择）</option>
-                {savedModels.map((m) => (
+                {savedModels.filter((m) => !m.legacy).map((m) => (
                   <option key={m.name} value={m.name}>
-                    {m.name} {m.model_type ? `(${m.model_type})` : ''}
+                    {m.name} {m.modelType ? `(${m.modelType})` : ''}
                   </option>
                 ))}
               </select>
@@ -190,8 +190,13 @@ export const PredictPage: React.FC = () => {
                 <span className="text-sm font-normal text-gray-500 ml-2">{result.units}</span>
               </div>
               <div className="text-xs text-gray-500 mt-2">
-                不确定性: ±{result.uncertainty?.toFixed(2)} · 模型: {result.modelUsed}
+                {result.uncertaintyKind}: ±{result.uncertainty?.toFixed(2)} · 模型: {result.modelUsed}
               </div>
+              {result.warnings.length > 0 && (
+                <ul className="text-xs text-amber-700 mt-3 list-disc pl-5">
+                  {result.warnings.map((warning) => <li key={warning}>{warning}</li>)}
+                </ul>
+              )}
             </div>
           )}
         </div>

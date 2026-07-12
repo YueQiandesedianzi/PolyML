@@ -8,7 +8,7 @@ from sklearn.impute import SimpleImputer
 def encode_processing_conditions(
     df: pd.DataFrame,
     numeric_cols: list[str]
-) -> tuple[np.ndarray, list[str], SimpleImputer]:
+) -> tuple[np.ndarray, list[str], SimpleImputer | None]:
     """
     Extract and standardize user-provided processing condition columns.
 
@@ -26,8 +26,6 @@ def encode_processing_conditions(
     for col in numeric_cols:
         X[col] = pd.to_numeric(X[col], errors='coerce')
 
-    # Impute missing values with median
-    imputer = SimpleImputer(strategy='median')
-    X_imputed = imputer.fit_transform(X.values.astype(np.float64))
-
-    return X_imputed, numeric_cols, imputer
+    # Do not fit an imputer here: preprocessing must be fitted inside each
+    # training/CV fold. The returned matrix intentionally preserves NaNs.
+    return X.values.astype(np.float64), numeric_cols, None

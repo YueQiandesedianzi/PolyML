@@ -8,7 +8,8 @@ os.environ["NUMEXPR_NUM_THREADS"] = "1"
 os.environ["OMP_NUM_THREADS"] = "1"
 
 from contextlib import asynccontextmanager
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
+from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from config import settings
 from db.database import init_db, close_db
@@ -45,14 +46,23 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(
     title="PolyML",
-    version="0.1.0",
+    version="0.1.1",
     lifespan=lifespan,
 )
 
+
+@app.middleware("http")
+async def require_session_token(request: Request, call_next):
+    """Protect the fixed loopback API from unrelated local/browser clients."""
+    expected = os.environ.get("POLYML_SESSION_TOKEN", "")
+    if expected and request.headers.get("X-PolyML-Token") != expected:
+        return JSONResponse(status_code=401, content={"detail": "Invalid PolyML session token"})
+    return await call_next(request)
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "http://127.0.0.1:5173", "http://localhost:18921", "http://127.0.0.1:18921"],
-    allow_credentials=True,
+    allow_origins=["*"],
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -84,5 +94,5 @@ async def health_check():
     return {
         "status": "ok",
         "rdkit": rdkit_ok,
-        "version": "0.1.0",
+        "version": "0.1.1",
     }

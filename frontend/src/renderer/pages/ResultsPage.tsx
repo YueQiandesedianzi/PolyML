@@ -339,27 +339,33 @@ const ResidualPlot: React.FC<{ data: any }> = ({ data }) => {
 /* ---- Model Comparison Bar Chart ---- */
 const ModelComparisonChart: React.FC<{ runs: any[] }> = ({ runs }) => {
   // Aggregate best result per model across runs
-  const modelBest: Record<string, { r2: number; rmse: number; count: number }> = {}
+  const modelBest: Record<string, { score: number; metric: string }> = {}
   for (const run of runs) {
     for (const [key, val] of Object.entries(run.results || {})) {
       const v = val as any
-      if (!modelBest[key] || v.test_r2 > modelBest[key].r2) {
-        modelBest[key] = { r2: v.test_r2, rmse: v.test_rmse, count: 1 }
+      const metric = v.selection_metric || 'rmse'
+      const score = Number(v.cv_score)
+      const better = metric === 'r2'
+        ? score > (modelBest[key]?.score ?? -Infinity)
+        : score < (modelBest[key]?.score ?? Infinity)
+      if (!modelBest[key] || better) {
+        modelBest[key] = { score, metric }
       }
     }
   }
 
-  const entries = Object.entries(modelBest).sort(([, a], [, b]) => b.r2 - a.r2)
+  const entries = Object.entries(modelBest).sort(([, a], [, b]) =>
+    a.metric === 'r2' ? b.score - a.score : a.score - b.score)
   if (entries.length === 0) return <p className="text-sm text-gray-500">无对比数据</p>
 
-  const maxR2 = Math.max(...entries.map(([, v]) => v.r2))
+  const bestLoss = Math.min(...entries.filter(([, v]) => v.metric !== 'r2').map(([, v]) => v.score).filter(Number.isFinite), 1)
   const barColors = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#06b6d4', '#84cc16']
 
   return (
     <div>
       <div className="flex gap-4 mb-4">
         <div className="flex items-center gap-2 text-xs text-gray-500">
-          <div className="w-3 h-3 rounded" style={{ background: barColors[0] }} /> R²
+          <div className="w-3 h-3 rounded" style={{ background: barColors[0] }} /> 内部交叉验证指标
         </div>
       </div>
       <div className="space-y-2">
@@ -370,12 +376,12 @@ const ModelComparisonChart: React.FC<{ runs: any[] }> = ({ runs }) => {
               <div className="flex-1 bg-gray-100 rounded-full h-5 overflow-hidden">
                 <div
                   className="h-full rounded-full transition-all"
-                  style={{ width: `${(val.r2 / (maxR2 || 1)) * 100}%`, background: barColors[i % barColors.length] }}
+                  style={{ width: `${Math.max(5, Math.min(100, val.metric === 'r2' ? val.score * 100 : (bestLoss / val.score) * 100))}%`, background: barColors[i % barColors.length] }}
                 />
               </div>
-              <span className="text-xs font-mono text-gray-600 w-14 text-right">{val.r2?.toFixed(4)}</span>
+              <span className="text-xs font-mono text-gray-600 w-14 text-right">{val.score?.toFixed(4)}</span>
             </div>
-            <span className="text-[10px] text-gray-400 w-20 text-right">RMSE {val.rmse?.toFixed(3)}</span>
+            <span className="text-[10px] text-gray-400 w-20 text-right">{val.metric}</span>
           </div>
         ))}
       </div>

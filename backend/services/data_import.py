@@ -21,13 +21,17 @@ def parse_file(file_path: str, file_content: Optional[bytes] = None) -> pd.DataF
 
     if file_content:
         buf = io.BytesIO(file_content)
-        if suffix in ('.xlsx', '.xls'):
+        if suffix == '.xlsx':
             return pd.read_excel(buf, engine='openpyxl')
+        if suffix == '.xls':
+            return pd.read_excel(buf)
         else:
             return pd.read_csv(buf)
 
-    if suffix in ('.xlsx', '.xls'):
+    if suffix == '.xlsx':
         return pd.read_excel(str(path), engine='openpyxl')
+    if suffix == '.xls':
+        return pd.read_excel(str(path))
     else:
         return pd.read_csv(str(path))
 

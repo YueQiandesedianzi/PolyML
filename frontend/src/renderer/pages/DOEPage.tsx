@@ -103,7 +103,7 @@ export const DOEPage: React.FC = () => {
     }
   }
 
-  const handleApply = async (mode: 'append' | 'predict') => {
+  const handleApply = async (mode: 'pending' | 'prediction') => {
     if (!currentProject || !design) return
     setLoading(true)
     try {
@@ -111,6 +111,7 @@ export const DOEPage: React.FC = () => {
         mode,
         designMatrix: design.designMatrix,
         smilesTemplate: '*',
+        candidateSetId: design.candidateSetId,
       })
       setApplied(true)
     } catch (e: any) {
@@ -292,8 +293,12 @@ export const DOEPage: React.FC = () => {
                     />
                     <span className="text-gray-400">of</span>
                     <select
-                      value={c.factorNames.join(',')}
-                      onChange={(e) => setConstraints((prev) => prev.map((x, j) => j === i ? { ...x, factorNames: e.target.value.split(',') } : x))}
+                      multiple
+                      value={c.factorNames}
+                      onChange={(e) => {
+                        const selected = Array.from(e.target.selectedOptions, (option) => option.value)
+                        setConstraints((prev) => prev.map((x, j) => j === i ? { ...x, factorNames: selected } : x))
+                      }}
                       className="border border-gray-300 rounded px-2 py-1 flex-1"
                     >
                       {Array.from(selectedFactors).map((fn) => (
@@ -375,14 +380,14 @@ export const DOEPage: React.FC = () => {
                     上一步
                   </button>
                   <button
-                    onClick={() => handleApply('append')}
+                    onClick={() => handleApply('pending')}
                     disabled={loading}
                     className="bg-primary-600 text-white px-5 py-2 rounded-md text-sm font-medium hover:bg-primary-700 disabled:opacity-50 transition"
                   >
                     {loading ? '应用中...' : '追加到数据集'}
                   </button>
                   <button
-                    onClick={() => handleApply('predict')}
+                    onClick={() => handleApply('prediction')}
                     disabled={loading}
                     className="border border-primary-300 text-primary-600 px-4 py-2 rounded-md text-sm hover:bg-primary-50 transition"
                   >

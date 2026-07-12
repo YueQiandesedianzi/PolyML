@@ -1,10 +1,29 @@
-import { app, BrowserWindow, ipcMain, dialog } from 'electron'
+import { app, BrowserWindow, dialog } from 'electron'
+import { randomBytes } from 'crypto'
+import { createServer } from 'net'
 import { join } from 'path'
-import { PythonManager } from './python-manager'
 import { registerIpcHandlers } from './ipc-handlers'
+import { PythonManager } from './python-manager'
 
 let mainWindow: BrowserWindow | null = null
 const pythonManager = new PythonManager()
+const sessionToken = randomBytes(32).toString('hex')
+
+async function reserveAvailableLoopbackPort(): Promise<number> {
+  return new Promise((resolve, reject) => {
+    const server = createServer()
+    server.once('error', reject)
+    server.listen(0, '127.0.0.1', () => {
+      const address = server.address()
+      if (!address || typeof address === 'string') {
+        server.close(() => reject(new Error('Unable to allocate a loopback port')))
+        return
+      }
+      const port = address.port
+      server.close((error) => error ? reject(error) : resolve(port))
+    })
+  })
+}
 
 function createWindow(): void {
   mainWindow = new BrowserWindow({
@@ -24,7 +43,6 @@ function createWindow(): void {
   mainWindow.on('ready-to-show', () => {
     mainWindow?.show()
   })
-
   mainWindow.on('closed', () => {
     mainWindow = null
   })
@@ -37,27 +55,28 @@ function createWindow(): void {
 }
 
 app.whenReady().then(async () => {
-  registerIpcHandlers()
+  const backendPort = await reserveAvailableLoopbackPort()
+  registerIpcHandlers({ port: backendPort, sessionToken })
 
-  // Start Python backend
-  const backendDir = join(app.getAppPath(), '..', 'backend')
-  const port = 18921
-  await pythonManager.start(backendDir, port)
+  const backendDir = app.isPackaged
+    ? join(process.resourcesPath, 'backend')
+    : join(app.getAppPath(), '..', 'backend')
+  try {
+    await pythonManager.start(backendDir, backendPort, sessionToken)
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error)
+    dialog.showErrorBox('PolyML backend startup failed', message)
+  }
 
   createWindow()
-
   app.on('activate', () => {
-    if (BrowserWindow.getAllWindows().length === 0) {
-      createWindow()
-    }
+    if (BrowserWindow.getAllWindows().length === 0) createWindow()
   })
 })
 
 app.on('window-all-closed', () => {
   pythonManager.stop()
-  if (process.platform !== 'darwin') {
-    app.quit()
-  }
+  if (process.platform !== 'darwin') app.quit()
 })
 
 app.on('before-quit', () => {

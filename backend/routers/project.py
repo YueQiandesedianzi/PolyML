@@ -6,7 +6,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
-from routers._utils import validate_id
+from routers._utils import atomic_write_json, validate_id
 
 router = APIRouter(prefix="/api/projects", tags=["projects"])
 
@@ -61,14 +61,15 @@ async def create_project(body: ProjectCreate, app_data_path: str = ""):
         "target_column": None,
         "smiles_column": None,
         "feature_count": 0,
+        "schema_version": 2,
+        "data_revision": 0,
     }
 
     proj_dir = projects_path / project_id
     proj_dir.mkdir(parents=True, exist_ok=True)
     (proj_dir / "models").mkdir(exist_ok=True)
 
-    with open(proj_dir / "project.json", "w", encoding="utf-8") as f:
-        json.dump(project_data, f, indent=2, ensure_ascii=False)
+    atomic_write_json(proj_dir / "project.json", project_data)
 
     return project_data
 

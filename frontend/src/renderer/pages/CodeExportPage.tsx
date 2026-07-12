@@ -9,6 +9,8 @@ export const CodeExportPage: React.FC = () => {
   const [error, setError] = useState<string | null>(null)
   const [includeComments, setIncludeComments] = useState(true)
   const [copied, setCopied] = useState(false)
+  const [scriptFilename, setScriptFilename] = useState('polyml-reproduce.py')
+  const [bundleFilename, setBundleFilename] = useState('model_bundle.joblib')
 
   const handleGenerate = async () => {
     if (!currentProject) return
@@ -20,6 +22,8 @@ export const CodeExportPage: React.FC = () => {
         includeComments,
       })
       setScript(res.data.script)
+      setScriptFilename(res.data.filename ?? 'polyml-reproduce.py')
+      setBundleFilename(res.data.bundle_filename ?? res.data.bundleFilename ?? 'model_bundle.joblib')
     } catch (e: any) {
       setError(e.response?.data?.detail || e.message)
     } finally {
@@ -39,7 +43,18 @@ export const CodeExportPage: React.FC = () => {
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
     a.href = url
-    a.download = `polyml_reproduce_${currentProject.id.slice(0, 8)}.py`
+    a.download = scriptFilename
+    a.click()
+    URL.revokeObjectURL(url)
+  }
+
+  const handleBundleDownload = async () => {
+    if (!currentProject) return
+    const response = await api.get(`/projects/${currentProject.id}/code-export/bundle`, { responseType: 'blob' })
+    const url = URL.createObjectURL(response.data)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = bundleFilename
     a.click()
     URL.revokeObjectURL(url)
   }
@@ -85,6 +100,12 @@ export const CodeExportPage: React.FC = () => {
                     className="border border-gray-300 text-gray-700 px-4 py-2 rounded-md text-sm hover:bg-gray-50 transition"
                   >
                     下载 .py 文件
+                  </button>
+                  <button
+                    onClick={handleBundleDownload}
+                    className="border border-gray-300 text-gray-700 px-4 py-2 rounded-md text-sm hover:bg-gray-50 transition"
+                  >
+                    下载模型包
                   </button>
                 </>
               )}

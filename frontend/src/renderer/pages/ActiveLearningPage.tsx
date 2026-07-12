@@ -4,7 +4,7 @@ import { useProjectStore } from '@/renderer/store/projectStore'
 
 interface Suggestion {
   index: number
-  features: number[]
+  factors: Record<string, number>
   acquisition_score: number
   predicted_y: number
   predicted_std: number
@@ -29,15 +29,19 @@ export const ActiveLearningPage: React.FC = () => {
   const [cvResults, setCvResults] = useState<CVResults | null>(null)
   const [acquisition, setAcquisition] = useState('ei')
   const [nSuggestions, setNSuggestions] = useState(5)
+  const [candidateSetId, setCandidateSetId] = useState('')
   const [loading, setLoading] = useState(false)
   const [evalLoading, setEvalLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [status, setStatus] = useState<{ ready: boolean; n_samples?: number; n_features?: number } | null>(null)
+  const [status, setStatus] = useState<{ ready: boolean; n_samples?: number; n_features?: number; candidate_sets?: string[] } | null>(null)
 
   useEffect(() => {
     if (currentProject) {
       api.get(`/projects/${currentProject.id}/active-learning/status`)
-        .then((r) => setStatus(r.data))
+        .then((r) => {
+          setStatus(r.data)
+          setCandidateSetId((current) => current || r.data.candidate_sets?.[0] || '')
+        })
         .catch(() => setStatus({ ready: false }))
     }
   }, [currentProject?.id])
@@ -48,6 +52,7 @@ export const ActiveLearningPage: React.FC = () => {
     setError(null)
     try {
       const res = await api.post(`/projects/${currentProject.id}/active-learning/suggest`, {
+        candidateSetId,
         acquisition,
         nSuggestions: nSuggestions,
         xi: 0.01,
@@ -101,6 +106,13 @@ export const ActiveLearningPage: React.FC = () => {
           <div className="bg-white border border-gray-200 rounded-lg p-5 mb-5">
             <div className="flex gap-6 items-end flex-wrap">
               <div>
+                <label className="text-xs text-gray-500">候选集</label>
+                <select value={candidateSetId} onChange={(e) => setCandidateSetId(e.target.value)} className="ml-2 border border-gray-300 rounded px-2 py-1 text-sm">
+                  <option value="">请选择 DOE 候选集</option>
+                  {(status.candidate_sets ?? []).map((id) => <option key={id} value={id}>{id}</option>)}
+                </select>
+              </div>
+              <div>
                 <label className="text-xs text-gray-500">采集函数</label>
                 <select
                   value={acquisition}
@@ -124,7 +136,7 @@ export const ActiveLearningPage: React.FC = () => {
               </div>
               <button
                 onClick={handleSuggest}
-                disabled={loading}
+                disabled={loading || !candidateSetId}
                 className="bg-primary-600 text-white px-5 py-2 rounded-md text-sm font-medium hover:bg-primary-700 disabled:opacity-50 transition"
               >
                 {loading ? '计算中...' : '推荐下一步实验'}
@@ -190,7 +202,7 @@ export const ActiveLearningPage: React.FC = () => {
                       <td className="px-4 py-2 text-right font-mono">{s.predicted_y.toFixed(4)}</td>
                       <td className="px-4 py-2 text-right font-mono text-orange-600">±{s.predicted_std.toFixed(4)}</td>
                       <td className="px-4 py-2 text-xs font-mono text-gray-500">
-                        [{s.features.slice(0, 5).map((f) => f.toFixed(2)).join(', ')}{s.features.length > 5 ? ', ...' : ''}]
+                        {Object.entries(s.factors).map(([name, value]) => `${name}=${Number(value).toFixed(3)}`).join(', ')}
                       </td>
                     </tr>
                   ))}

@@ -3,14 +3,18 @@
 import uuid
 import json
 import threading
+from importlib.metadata import version as package_version
 import numpy as np
+import pandas as pd
+import joblib
 from pathlib import Path
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import StreamingResponse
 from schemas.base import CamelModel
 from ml.training import run_automl_pipeline
+from ml.artifacts import ModelBundleV2, save_model_bundle
 from ml.shap_utils import compute_shap, compute_feature_importance
-from routers._utils import get_project_dir, load_meta, validate_id
+from routers._utils import atomic_write_json, get_project_dir, load_meta, validate_id
 
 router = APIRouter(prefix="/api/projects/{project_id}/automl", tags=["automl"])
 
@@ -21,6 +25,10 @@ class TrainConfig(CamelModel):
     cv_method: str = "kfold"  # kfold, loocv, repeated_kfold
     n_trials: int = 50
     test_size: float = 0.2
+    split_strategy: str = "random"  # random, group, time
+    group_column: str | None = None
+    selection_metric: str = "rmse"  # rmse, mae, r2
+    random_seed: int = 42
 
     def model_post_init(self, __context):
         if not 0 < self.test_size < 1:
@@ -29,6 +37,12 @@ class TrainConfig(CamelModel):
             raise ValueError("cv_folds must be at least 2")
         if self.n_trials < 1:
             raise ValueError("n_trials must be at least 1")
+        if self.split_strategy not in {"random", "group", "time"}:
+            raise ValueError("split_strategy must be random, group, or time")
+        if self.split_strategy == "group" and not self.group_column:
+            raise ValueError("group_column is required for group splitting")
+        if self.selection_metric not in {"rmse", "mae", "r2"}:
+            raise ValueError("selection_metric must be rmse, mae, or r2")
 
 
 # Active training cancellation flags keyed by run_id; secondary index by project_id
@@ -43,11 +57,36 @@ async def train(project_id: str, config: TrainConfig):
 
     if not features_path.exists():
         raise HTTPException(status_code=404, detail="Features not computed yet")
+    if project_id in _active_runs:
+        raise HTTPException(status_code=409, detail="A training run is already active for this project")
 
     data = np.load(features_path, allow_pickle=True)
     X = data["X"]
     y = data["y"]
     feature_names = data["feature_names"].tolist()
+    row_indices = data["row_indices"] if "row_indices" in data else np.arange(len(y))
+
+    groups = None
+    time_values = None
+    if config.group_column:
+        raw_path = proj_dir / "imported_data.csv"
+        if not raw_path.exists():
+            raise HTTPException(status_code=404, detail="Imported data not found")
+        raw_df = pd.read_csv(raw_path)
+        if config.group_column not in raw_df.columns:
+            raise HTTPException(status_code=400, detail=f"Column '{config.group_column}' not found")
+        selected = raw_df.iloc[row_indices][config.group_column]
+        if config.split_strategy == "group":
+            groups = selected.fillna("__missing__").astype(str).to_numpy()
+        elif config.split_strategy == "time":
+            numeric = pd.to_numeric(selected, errors="coerce")
+            if numeric.notna().all():
+                time_values = numeric.to_numpy()
+            else:
+                parsed = pd.to_datetime(selected, errors="coerce", utc=True)
+                if parsed.isna().any():
+                    raise HTTPException(status_code=400, detail="time split column must be numeric or datetime")
+                time_values = parsed.astype("int64").to_numpy()
 
     cancel_event = threading.Event()
     run_id = str(uuid.uuid4())
@@ -56,8 +95,6 @@ async def train(project_id: str, config: TrainConfig):
 
     def generate():
         result_events = []
-        best_result = None
-
         try:
             for event in run_automl_pipeline(
                 X, y,
@@ -69,11 +106,61 @@ async def train(project_id: str, config: TrainConfig):
                 cancel_event=cancel_event,
                 project_dir=str(proj_dir),
                 run_id=run_id,
+                random_state=config.random_seed,
+                split_strategy=config.split_strategy,
+                groups=groups,
+                time_values=time_values,
+                selection_metric=config.selection_metric,
             ):
                 result_events.append(event)
 
                 if event["type"] == "all_complete":
                     best_key = event["data"]["best_model"]
+                    best_metrics = event["data"]["results"].get(best_key, {})
+
+                    feature_spec_path = proj_dir / "feature-spec.json"
+                    if not feature_spec_path.exists():
+                        raise RuntimeError("Feature specification missing; recompute features")
+                    with open(feature_spec_path, encoding="utf-8") as f:
+                        feature_spec = json.load(f)
+                    pipeline_path = proj_dir / f"pipeline_{best_key}_{run_id}.joblib"
+                    best_pipeline = joblib.load(pipeline_path)
+                    meta = load_meta(project_id)
+                    split_for_domain = np.load(proj_dir / f"split_{run_id}.npz")
+                    X_domain = best_pipeline.named_steps["imputer"].transform(split_for_domain["X_train"])
+                    center = np.mean(X_domain, axis=0)
+                    scale = np.std(X_domain, axis=0)
+                    scale[scale < 1e-12] = 1.0
+                    distances = np.sqrt(np.mean(((X_domain - center) / scale) ** 2, axis=1))
+                    bundle = ModelBundleV2(
+                        model_id=f"run-{run_id}",
+                        run_id=run_id,
+                        model_type=best_key,
+                        pipeline=best_pipeline,
+                        feature_spec=feature_spec,
+                        metrics=best_metrics,
+                        target_name=feature_spec.get("targetColumn", meta.get("target_column", "target")),
+                        target_unit=feature_spec.get("targetUnit", meta.get("target_unit", "")),
+                        model_card={
+                            "dataRevision": feature_spec.get("dataRevision"),
+                            "splitStrategy": config.split_strategy,
+                            "groupColumn": config.group_column,
+                            "selectionMetric": config.selection_metric,
+                            "randomSeed": config.random_seed,
+                            "failedSmiles": meta.get("rdkit_failures", []),
+                            "softwareVersions": {
+                                name: package_version(name)
+                                for name in ["numpy", "pandas", "scikit-learn", "rdkit", "xgboost", "optuna", "shap"]
+                            },
+                            "applicabilityDomain": {
+                                "method": "standardized_rms_distance",
+                                "center": center.tolist(),
+                                "scale": scale.tolist(),
+                                "threshold": float(np.quantile(distances, 0.95)),
+                            },
+                        },
+                    )
+                    save_model_bundle(bundle, proj_dir / f"bundle_{run_id}.joblib")
 
                     # Compute SHAP and feature importance for best model
                     try:
@@ -86,7 +173,6 @@ async def train(project_id: str, config: TrainConfig):
 
                             best_pipeline_path = proj_dir / f"pipeline_{best_key}_{run_id}.joblib"
                             if best_pipeline_path.exists():
-                                import joblib
                                 best_pipeline = joblib.load(best_pipeline_path)
 
                                 # Parity data (y_test vs y_pred)
@@ -135,7 +221,8 @@ async def train(project_id: str, config: TrainConfig):
             yield f"event: error\ndata: {json.dumps({'message': str(e)})}\n\n"
         finally:
             _cancel_events.pop(run_id, None)
-            _active_runs.pop(project_id, None)
+            if _active_runs.get(project_id) == run_id:
+                _active_runs.pop(project_id, None)
 
     return StreamingResponse(
         generate(),
@@ -194,12 +281,15 @@ async def get_parity_data(project_id: str, run_id: str = ""):
     y_test = split_data["y_test"]
 
     # Find any pipeline for this run
-    import joblib, glob
-    pipeline_files = list(proj_dir.glob(f"pipeline_*_{run_id}.joblib"))
-    if not pipeline_files:
+    with open(proj_dir / "training_runs.json", encoding="utf-8") as f:
+        runs = json.load(f)
+    run = next((item for item in runs if item.get("run_id") == run_id), None)
+    if not run:
+        raise HTTPException(status_code=404, detail="Training run not found")
+    pipeline_path = proj_dir / f"pipeline_{run.get('best_model')}_{run_id}.joblib"
+    if not pipeline_path.exists():
         raise HTTPException(status_code=404, detail="Pipeline not found for this run")
-
-    pipeline = joblib.load(pipeline_files[0])
+    pipeline = joblib.load(pipeline_path)
     y_pred = pipeline.predict(X_test)
 
     from sklearn.metrics import r2_score, root_mean_squared_error, mean_absolute_error
@@ -256,6 +346,8 @@ async def delete_run(project_id: str, run_id: str):
         f"feature_importance_{run_id}.json",
         f"shap_{run_id}.json",
         f"split_{run_id}.npz",
+        f"bundle_{run_id}.joblib",
+        f"oof_{run_id}.npz",
     ]
     # Delete all pipeline files for this run
     for f_path in proj_dir.iterdir():
@@ -287,20 +379,26 @@ def _save_run(project_id: str, run_id: str, config: TrainConfig, events: list[di
     # Extract model results from events
     model_results = {}
     best_model = None
+    outer_test = {}
+    total_duration = None
     for event in events:
         if event["type"] == "all_complete":
             best_model = event["data"].get("best_model")
             model_results = event["data"].get("results", {})
+            outer_test = event["data"].get("outer_test", {})
+            total_duration = event["data"].get("total_duration_sec")
 
     run_data = {
         "run_id": run_id,
         "config": config.model_dump(),
         "best_model": best_model,
         "results": model_results,
+        "outer_test": outer_test,
+        "total_duration_sec": total_duration,
+        "data_revision": load_meta(project_id).get("data_revision", 1),
         "timestamp": str(__import__('datetime').datetime.now(__import__('datetime').timezone.utc)),
     }
 
     runs.append(run_data)
 
-    with open(runs_file, "w", encoding="utf-8") as f:
-        json.dump(runs, f, indent=2, ensure_ascii=False)
+    atomic_write_json(runs_file, runs)

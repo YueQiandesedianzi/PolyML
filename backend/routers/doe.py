@@ -5,6 +5,7 @@ import json
 import numpy as np
 import pandas as pd
 from pathlib import Path
+from typing import Literal
 from fastapi import APIRouter, HTTPException
 from schemas.base import CamelModel
 from ml.doe import (
@@ -18,7 +19,7 @@ from ml.doe import (
     estimate_experiment_count,
     apply_constraints,
 )
-from routers._utils import get_project_dir
+from routers._utils import atomic_write_json, get_project_dir
 
 router = APIRouter(prefix="/api/projects/{project_id}/doe", tags=["doe"])
 
@@ -34,7 +35,7 @@ class DOEConstraintInput(CamelModel):
     type: str
     factor_names: list[str]
     value: float
-    relation: str = "=="
+    relation: Literal["eq", "lte", "gte"] = "eq"
 
 
 class DOEDesignRequest(CamelModel):
@@ -47,10 +48,11 @@ class DOEDesignRequest(CamelModel):
 
 
 class DOEApplyRequest(CamelModel):
-    mode: str = "append"  # "append" or "predict"
+    mode: Literal["pending", "prediction"] = "pending"
     design_matrix: list[dict]
     smiles_template: str = "*"
     fill_values: dict = {}
+    candidate_set_id: str | None = None
 
 
 @router.get("/factors")
@@ -103,7 +105,11 @@ async def generate_design(project_id: str, request: DOEDesignRequest):
     # Convert to DOEFactor objects
     factors = []
     for f in request.factors:
+        if not f.name or f.low >= f.high:
+            raise HTTPException(status_code=400, detail=f"Factor '{f.name}' must have low < high")
         center = f.center if f.center is not None else (f.low + f.high) / 2
+        if not f.low <= center <= f.high:
+            raise HTTPException(status_code=400, detail=f"Factor '{f.name}' center must be within bounds")
         factors.append(DOEFactor(
             name=f.name,
             low=f.low,
@@ -113,6 +119,10 @@ async def generate_design(project_id: str, request: DOEDesignRequest):
 
     if len(factors) < 2:
         raise HTTPException(status_code=400, detail="At least 2 factors required")
+    if len(factors) > 12:
+        raise HTTPException(status_code=400, detail="At most 12 factors are supported")
+    if len({factor.name for factor in factors}) != len(factors):
+        raise HTTPException(status_code=400, detail="Factor names must be unique")
 
     # Generate design based on method
     try:
@@ -137,6 +147,11 @@ async def generate_design(project_id: str, request: DOEDesignRequest):
     if request.constraints:
         constraint_objs = []
         for c in request.constraints:
+            unknown = sorted(set(c.factor_names) - {factor.name for factor in factors})
+            if unknown:
+                raise HTTPException(status_code=400, detail=f"Unknown constraint factors: {', '.join(unknown)}")
+            if c.type == "ratio" and len(c.factor_names) != 2:
+                raise HTTPException(status_code=400, detail="Ratio constraints require exactly two factors")
             constraint_objs.append(DOEConstraint(
                 constraint_type=c.type,
                 factor_names=c.factor_names,
@@ -151,17 +166,20 @@ async def generate_design(project_id: str, request: DOEDesignRequest):
 
     # Save design to project directory for later apply
     design_id = str(uuid.uuid4())[:8]
-    design_path = proj_dir / f"doe_design_{design_id}.json"
-    with open(design_path, "w", encoding="utf-8") as f:
-        json.dump({
-            "design_id": design_id,
-            "method": request.method,
-            "factor_names": factor_names,
-            "design_matrix": matrix,
-        }, f, indent=2, ensure_ascii=False)
+    candidate_dir = proj_dir / "candidate_sets"
+    design_path = candidate_dir / f"{design_id}.json"
+    atomic_write_json(design_path, {
+        "schema_version": 2,
+        "candidate_set_id": design_id,
+        "method": request.method,
+        "factor_names": factor_names,
+        "design_matrix": matrix,
+        "source": "doe",
+    })
 
     return {
         "design_id": design_id,
+        "candidate_set_id": design_id,
         "method": request.method,
         "n_experiments": len(matrix),
         "n_before_constraints": n_before,
@@ -205,19 +223,18 @@ async def apply_design(project_id: str, request: DOEApplyRequest):
 
     new_df = pd.DataFrame(new_rows)
 
-    if request.mode == "append":
-        # Ensure column order matches original
-        for col in df.columns:
-            if col not in new_df.columns:
-                new_df[col] = np.nan
-        new_df = new_df[df.columns]
-
-        combined = pd.concat([df, new_df], ignore_index=True)
-        combined.to_csv(raw_csv, index=False)
+    if request.mode == "pending":
+        new_df["candidate_set_id"] = request.candidate_set_id or "manual"
+        new_df["experiment_status"] = "pending"
+        queue_path = proj_dir / "experiment_queue.csv"
+        existing = pd.read_csv(queue_path) if queue_path.exists() else pd.DataFrame()
+        combined = pd.concat([existing, new_df], ignore_index=True, sort=False)
+        combined.to_csv(queue_path, index=False)
         return {
             "applied": True,
             "rows_added": len(new_rows),
             "total_rows": len(combined),
+            "destination": "experiment_queue.csv",
         }
     else:
         # Save as prediction set
@@ -227,4 +244,5 @@ async def apply_design(project_id: str, request: DOEApplyRequest):
             "applied": True,
             "rows_added": len(new_rows),
             "total_rows": len(new_rows),
+            "destination": "doe_predict_data.csv",
         }

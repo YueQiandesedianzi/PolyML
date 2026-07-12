@@ -29,6 +29,10 @@ export interface AutoMLConfig {
   cvMethod: string
   nTrials: number
   testSize: number
+  splitStrategy?: 'random' | 'group' | 'time'
+  groupColumn?: string
+  selectionMetric?: 'rmse' | 'mae' | 'r2'
+  randomSeed?: number
 }
 
 export interface SSEEvent {
@@ -62,6 +66,12 @@ export interface PredictionResponse {
   uncertainty: number
   units: string
   modelUsed: string
+  modelId: string
+  targetName: string
+  targetUnit: string
+  uncertaintyKind: string
+  warnings: string[]
+  applicabilityDomain?: { available: boolean; inside: boolean | null; distance: number | null; threshold: number | null }
 }
 
 // DOE types
@@ -99,13 +109,15 @@ export interface DOEDesignResponse {
   factorNames: string[]
   levels: Record<string, number[]>
   constraintsApplied?: boolean
+  candidateSetId: string
 }
 
 export interface DOEApplyRequest {
-  mode: 'append' | 'predict'
+  mode: 'pending' | 'prediction'
   designMatrix: Record<string, number>[]
   smilesTemplate?: string
   fillValues?: Record<string, any>
+  candidateSetId?: string
 }
 
 // Custom feature types

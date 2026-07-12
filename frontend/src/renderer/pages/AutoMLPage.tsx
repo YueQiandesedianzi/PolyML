@@ -33,6 +33,9 @@ export const AutoMLPage: React.FC = () => {
   const [cvFolds, setCvFolds] = useState(5)
   const [cvMethod, setCvMethod] = useState('kfold')
   const [nTrials, setNTrials] = useState(50)
+  const [splitStrategy, setSplitStrategy] = useState<'random' | 'group' | 'time'>('random')
+  const [groupColumn, setGroupColumn] = useState('')
+  const [selectionMetric, setSelectionMetric] = useState<'rmse' | 'mae' | 'r2'>('rmse')
   const [training, setTraining] = useState(false)
   const [progress, setProgress] = useState<string[]>([])
   const [error, setError] = useState<string | null>(null)
@@ -53,22 +56,20 @@ export const AutoMLPage: React.FC = () => {
 
     controllerRef.current = trainAutoML(
       currentProject.id,
-      { models: selectedModels, cvFolds, cvMethod, nTrials, testSize: 0.2 },
+      {
+        models: selectedModels, cvFolds, cvMethod, nTrials, testSize: 0.2,
+        splitStrategy,
+        groupColumn: groupColumn.trim() || undefined,
+        selectionMetric,
+        randomSeed: 42,
+      },
       (event) => {
         if (event.type === 'model_start') {
           const d = event.data
           setProgress((p) => [...p, `[${d.current_model}/${d.total_models}] 正在训练 ${d.model}...`])
-        } else if (event.type === 'trial_update') {
-          const d = event.data
-          setProgress((p) => {
-            const updated = [...p]
-            const lastIdx = updated.length - 1
-            updated[lastIdx] = `[${d.model}] 试验 ${d.trial}/${d.total_trials} · 最佳 MSE: ${d.best_mse.toFixed(4)} · ${d.elapsed_sec}s`
-            return updated
-          })
         } else if (event.type === 'model_complete') {
           const d = event.data
-          setProgress((p) => [...p, `✓ ${d.model}: R²=${d.r2} RMSE=${d.rmse} MAE=${d.mae} (${d.duration_sec}s)`])
+          setProgress((p) => [...p, `✓ ${d.model}: CV ${d.selection_metric}=${Number(d.cv_score).toFixed(4)} (${d.duration_sec}s)`])
           setModelResults({ [d.model]: d })
         } else if (event.type === 'all_complete') {
           const d = event.data
@@ -129,6 +130,28 @@ export const AutoMLPage: React.FC = () => {
             </div>
 
             <div className="flex gap-6 items-center flex-wrap">
+              <div>
+                <label className="text-xs text-gray-500">数据划分</label>
+                <select value={splitStrategy} onChange={(e) => setSplitStrategy(e.target.value as any)} className="ml-2 border border-gray-300 rounded px-2 py-1 text-sm">
+                  <option value="random">随机</option>
+                  <option value="group">按组</option>
+                  <option value="time">按时间</option>
+                </select>
+              </div>
+              {splitStrategy !== 'random' && (
+                <div>
+                  <label className="text-xs text-gray-500">{splitStrategy === 'group' ? '分组列' : '时间列'}</label>
+                  <input value={groupColumn} onChange={(e) => setGroupColumn(e.target.value)} className="w-32 ml-2 border border-gray-300 rounded px-2 py-1 text-sm" />
+                </div>
+              )}
+              <div>
+                <label className="text-xs text-gray-500">选型指标</label>
+                <select value={selectionMetric} onChange={(e) => setSelectionMetric(e.target.value as any)} className="ml-2 border border-gray-300 rounded px-2 py-1 text-sm">
+                  <option value="rmse">RMSE</option>
+                  <option value="mae">MAE</option>
+                  <option value="r2">R²</option>
+                </select>
+              </div>
               <div>
                 <label className="text-xs text-gray-500">交叉验证方法</label>
                 <select
@@ -205,20 +228,20 @@ export const AutoMLPage: React.FC = () => {
                 <thead className="bg-gray-50">
                   <tr>
                     <th className="px-4 py-2 text-left text-xs font-medium text-gray-500">模型</th>
-                    <th className="px-4 py-2 text-right text-xs font-medium text-gray-500">R²</th>
-                    <th className="px-4 py-2 text-right text-xs font-medium text-gray-500">RMSE</th>
-                    <th className="px-4 py-2 text-right text-xs font-medium text-gray-500">MAE</th>
+                    <th className="px-4 py-2 text-right text-xs font-medium text-gray-500">CV 指标</th>
+                    <th className="px-4 py-2 text-right text-xs font-medium text-gray-500">耗时</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100">
                   {Object.entries(modelResults)
-                    .sort(([, a], [, b]) => (b.r2 ?? 0) - (a.r2 ?? 0))
+                    .sort(([, a], [, b]) => selectionMetric === 'r2'
+                      ? (b.cv_score ?? -Infinity) - (a.cv_score ?? -Infinity)
+                      : (a.cv_score ?? Infinity) - (b.cv_score ?? Infinity))
                     .map(([key, r], i) => (
                       <tr key={key} className={i === 0 ? 'bg-green-50' : ''}>
                         <td className="px-4 py-2 font-medium">{key}{i === 0 ? ' 🏆' : ''}</td>
-                        <td className="px-4 py-2 text-right font-mono">{r.r2?.toFixed(4)}</td>
-                        <td className="px-4 py-2 text-right font-mono">{r.rmse?.toFixed(4)}</td>
-                        <td className="px-4 py-2 text-right font-mono">{r.mae?.toFixed(4)}</td>
+                        <td className="px-4 py-2 text-right font-mono">{r.cv_score?.toFixed(4)}</td>
+                        <td className="px-4 py-2 text-right font-mono">{r.duration_sec?.toFixed(1)}s</td>
                       </tr>
                     ))}
                 </tbody>

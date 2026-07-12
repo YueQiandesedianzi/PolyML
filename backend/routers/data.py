@@ -7,7 +7,7 @@ from pathlib import Path
 from fastapi import APIRouter, UploadFile, File, HTTPException
 from pydantic import BaseModel
 from services.data_import import parse_file, detect_column_types, get_data_summary
-from routers._utils import get_project_dir, load_meta, save_meta
+from routers._utils import atomic_write_json, get_project_dir, load_meta, save_meta
 
 router = APIRouter(prefix="/api/projects/{project_id}/data", tags=["data"])
 
@@ -25,7 +25,11 @@ async def import_data(project_id: str, file: UploadFile = File(...)):
     # Save uploaded file
     filename = file.filename or "data.csv"
     suffix = Path(filename).suffix.lower()
-    save_path = proj_dir / f"imported_data{suffix}"
+    if suffix not in {".csv", ".xlsx", ".xls"}:
+        raise HTTPException(status_code=400, detail="Only CSV, XLSX, and XLS files are supported")
+    source_dir = proj_dir / "source"
+    source_dir.mkdir(exist_ok=True)
+    save_path = source_dir / f"source_data{suffix}"
 
     content = await file.read()
     with open(save_path, "wb") as f:
@@ -45,6 +49,8 @@ async def import_data(project_id: str, file: UploadFile = File(...)):
     meta = load_meta(project_id)
     meta["data_filename"] = filename
     meta["data_row_count"] = len(df)
+    meta["source_data_path"] = str(Path("source") / save_path.name)
+    meta["data_revision"] = int(meta.get("data_revision", 0)) + 1
     save_meta(project_id, meta)
 
     # Return preview (first 100 rows)
@@ -73,15 +79,23 @@ async def map_columns(project_id: str, body: ColumnMapRequest):
     if unknown:
         raise HTTPException(status_code=400, detail=f"CSV 中不存在的列: {', '.join(unknown)}")
 
+    allowed_types = {"smiles", "numeric", "target", "ignore"}
+    invalid_types = sorted({v for v in body.mapping.values() if v not in allowed_types})
+    if invalid_types:
+        raise HTTPException(status_code=400, detail=f"Invalid column types: {', '.join(invalid_types)}")
+
     # Determine smiles, numeric, target columns
     smiles_cols = [k for k, v in body.mapping.items() if v == "smiles"]
     target_cols = [k for k, v in body.mapping.items() if v == "target"]
     numeric_cols = [k for k, v in body.mapping.items() if v == "numeric"]
+    if len(smiles_cols) > 1:
+        raise HTTPException(status_code=400, detail="Only one SMILES column is supported")
+    if len(target_cols) != 1:
+        raise HTTPException(status_code=400, detail="Exactly one target column is required")
 
     # Save mapping
     mapping_path = proj_dir / "column_mapping.json"
-    with open(mapping_path, "w", encoding="utf-8") as f:
-        json.dump(body.mapping, f, indent=2, ensure_ascii=False)
+    atomic_write_json(mapping_path, body.mapping)
 
     # Update metadata
     meta = load_meta(project_id)

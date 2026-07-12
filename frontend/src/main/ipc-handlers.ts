@@ -1,7 +1,7 @@
 import { ipcMain, dialog, app, BrowserWindow } from 'electron'
 import { join } from 'path'
 
-export function registerIpcHandlers(): void {
+export function registerIpcHandlers(backend: { port: number; sessionToken: string }): void {
   ipcMain.handle('select-file', async (_event, filters: Array<{name: string, extensions: string[]}>) => {
     const win = BrowserWindow.getFocusedWindow()
     if (!win) return null
@@ -51,4 +51,9 @@ export function registerIpcHandlers(): void {
   ipcMain.handle('get-platform', () => {
     return process.platform
   })
+
+  ipcMain.handle('get-backend-config', () => ({
+    baseUrl: `http://127.0.0.1:${backend.port}`,
+    sessionToken: backend.sessionToken,
+  }))
 }
